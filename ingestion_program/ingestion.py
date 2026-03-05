@@ -1,18 +1,14 @@
 """
 Ingestion program — TiVA Time-Machine Data Challenge
 
-Fichiers disponibles dans /app/input_data/ :
-  X_train.csv  — features train (2005-2015)
-  y_train.csv  — target train
-  X_test.csv   — features test (2016-2020)
-  [y_test.csv  — NON accessible par les participants]
+Chemins Docker fixes (Codabench) :
+  /app/input_data/       -> X_train.csv, y_train.csv, X_test.csv
+  /app/output/           -> predictions_public.csv, predictions_private.csv
+  /app/ingested_program/ -> submission.py du participant
 
-Workflow :
-  1. Charger et préparer les données
-  2. Importer get_model() depuis submission.py
-  3. Entraîner le modèle sur le train
-  4. Prédire sur public (2016-2018) et privé (2019-2020)
-  5. Écrire predictions_public.csv et predictions_private.csv
+Les prédictions sont sauvegardées AVEC les clés métier
+(Year, Source_Country, Target_Country, Sector_Code) pour permettre
+une jointure fiable dans le scoring program.
 """
 
 import os
@@ -39,6 +35,8 @@ if not os.path.exists(DATA_DIR):
     SUBMISSION_DIR = args.submission_dir
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+KEYS = ["Year", "Source_Country", "Target_Country", "Sector_Code"]
 
 
 # ── Feature engineering ────────────────────────────────────────────────────
@@ -79,34 +77,36 @@ def feature_engineering(df):
 if __name__ == "__main__":
     print("Chargement des données...")
 
-    # 1. Charger X et y séparément
     X_train_raw = pd.read_csv(os.path.join(DATA_DIR, "X_train.csv"), index_col=0)
-    y_train     = pd.read_csv(os.path.join(DATA_DIR, "y_train.csv"), index_col=0).squeeze()
+    y_train_raw = pd.read_csv(os.path.join(DATA_DIR, "y_train.csv"), index_col=0)["TiVA_Value_Target"]
     X_test_raw  = pd.read_csv(os.path.join(DATA_DIR, "X_test.csv"),  index_col=0)
 
-    # 2. Ajouter temporairement la target pour ne pas perdre l'index lors du concat
-    X_train_raw["TiVA_Value_Target"] = y_train.values
-    X_test_raw["TiVA_Value_Target"]  = 0  # placeholder, non utilisé
+    # Sauvegarder les clés métier du test AVANT feature engineering
+    keys_pub  = X_test_raw[X_test_raw["Year"].between(2016, 2018)][KEYS].reset_index(drop=True)
+    keys_priv = X_test_raw[X_test_raw["Year"].between(2019, 2020)][KEYS].reset_index(drop=True)
 
-    # 3. Fill missing + feature engineering sur le tout
+    # Ajouter target temporaire pour concat cohérent
+    X_train_raw["TiVA_Value_Target"] = y_train_raw.values
+    X_test_raw["TiVA_Value_Target"]  = 0  # placeholder
+
     X_train_raw = fill_missing(X_train_raw)
     X_test_raw  = fill_missing(X_test_raw)
 
     df_all = pd.concat([X_train_raw, X_test_raw], ignore_index=True)
     df_all = feature_engineering(df_all)
 
-    # 4. Split
+    # Split
     train_mask = df_all["Year"] <= 2015
     pub_mask   = df_all["Year"].between(2016, 2018)
     priv_mask  = df_all["Year"].between(2019, 2020)
 
-    drop_cols = ["TiVA_Value_Target", "Year"]
-    X_train = df_all[train_mask].drop(columns=drop_cols)
-    y_train = df_all[train_mask]["TiVA_Value_Target"]
-    X_pub   = df_all[pub_mask].drop(columns=drop_cols)
-    X_priv  = df_all[priv_mask].drop(columns=drop_cols)
+    drop_cols  = ["TiVA_Value_Target", "Year"]
+    X_train    = df_all[train_mask].drop(columns=drop_cols)
+    y_train    = df_all[train_mask]["TiVA_Value_Target"]
+    X_pub      = df_all[pub_mask].drop(columns=drop_cols)
+    X_priv     = df_all[priv_mask].drop(columns=drop_cols)
 
-    # 5. Normalisation
+    # Normalisation
     scaler     = StandardScaler()
     X_train_sc = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns, index=X_train.index)
     X_pub_sc   = pd.DataFrame(scaler.transform(X_pub),   columns=X_pub.columns,   index=X_pub.index)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     print(f"  Train : {X_train_sc.shape} | Public : {X_pub_sc.shape} | Privé : {X_priv_sc.shape}")
 
-    # 6. Charger le modèle du participant
+    # Charger le modèle du participant
     submission_file = os.path.join(SUBMISSION_DIR, "submission.py")
     if not os.path.exists(submission_file):
         raise FileNotFoundError(f"submission.py introuvable dans {SUBMISSION_DIR}")
@@ -129,7 +129,6 @@ if __name__ == "__main__":
     model = module.get_model()
     print(f"Modèle chargé : {type(model).__name__}")
 
-    # 7. Entraîner et prédire
     print("Entraînement...")
     model.fit(X_train_sc, y_train)
 
@@ -137,11 +136,12 @@ if __name__ == "__main__":
     y_pred_pub  = model.predict(X_pub_sc)
     y_pred_priv = model.predict(X_priv_sc)
 
-    # 8. Sauvegarder
-    pd.DataFrame({"TiVA_Value_Target": y_pred_pub}).to_csv(
-        os.path.join(OUTPUT_DIR, "predictions_public.csv"), index=False)
-    pd.DataFrame({"TiVA_Value_Target": y_pred_priv}).to_csv(
-        os.path.join(OUTPUT_DIR, "predictions_private.csv"), index=False)
+    # Sauvegarder prédictions AVEC les clés métier pour jointure dans scoring
+    keys_pub["TiVA_Value_Target"]  = y_pred_pub
+    keys_priv["TiVA_Value_Target"] = y_pred_priv
+
+    keys_pub.to_csv(os.path.join(OUTPUT_DIR,  "predictions_public.csv"),  index=False)
+    keys_priv.to_csv(os.path.join(OUTPUT_DIR, "predictions_private.csv"), index=False)
 
     print(f"  predictions_public.csv  : {len(y_pred_pub)} lignes")
     print(f"  predictions_private.csv : {len(y_pred_priv)} lignes")
