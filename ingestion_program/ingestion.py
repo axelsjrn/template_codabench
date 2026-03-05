@@ -1,21 +1,21 @@
 """
 Ingestion program — TiVA Time-Machine Data Challenge
 
-Chemins Docker fixes (Codabench) :
-  /app/input_data/       → données (X_train.csv, X_test.csv)
-  /app/output/           → prédictions à écrire
-  /app/ingested_program/ → submission.py du participant
+Fichiers disponibles dans /app/input_data/ :
+  X_train.csv  — features train (2005-2015)
+  y_train.csv  — target train
+  X_test.csv   — features test (2016-2020)
+  [y_test.csv  — NON accessible par les participants]
 
 Workflow :
   1. Charger et préparer les données
   2. Importer get_model() depuis submission.py
-  3. Entraîner le modèle sur le train (≤2015)
+  3. Entraîner le modèle sur le train
   4. Prédire sur public (2016-2018) et privé (2019-2020)
   5. Écrire predictions_public.csv et predictions_private.csv
 """
 
 import os
-import sys
 import importlib.util
 import pandas as pd
 import numpy as np
@@ -53,19 +53,19 @@ def fill_missing(df):
 
 
 def feature_engineering(df):
-    df["GDP_ratio"]           = np.log1p(df["GDP_USD_Source"]) - np.log1p(df["GDP_USD_Target"])
-    df["Tech_gap"]            = df["HighTech_Export_Source"]   - df["HighTech_Export_Target"]
-    df["RnD_gap"]             = df["Research_Spend_Source"]    - df["Research_Spend_Target"]
-    df["Unemployment_gap"]    = df["Unemployment_Source"]      - df["Unemployment_Target"]
-    df["Trade_openness_mean"] = (df["Trade_Openness_Source"]   + df["Trade_Openness_Target"]) / 2
-    df["Trade_openness_diff"] = df["Trade_Openness_Source"]    - df["Trade_Openness_Target"]
-    df["Market_size_target"]  = np.log1p(df["GDP_USD_Target"]  * df["Population_Target"])
-    df["GDP_per_capita_target"] = np.log1p(df["GDP_USD_Target"] / (df["Population_Target"] + 1))
-    df["Macro_stability"]     = -np.abs(df["Inflation_Target"])
-    df["Digital_gap"]         = df["Internet_Users_Source"]    - df["Internet_Users_Target"]
-    df["Tech_intensity_source"] = df["HighTech_Export_Source"] * df["Research_Spend_Source"]
-    df["FDI_ratio"]           = (np.log1p(df["FDI_Inflow_Source"])
-                                  / (np.log1p(df["FDI_Inflow_Target"]) + 1e-6))
+    df["GDP_ratio"]             = np.log1p(df["GDP_USD_Source"]) - np.log1p(df["GDP_USD_Target"])
+    df["Tech_gap"]              = df["HighTech_Export_Source"]   - df["HighTech_Export_Target"]
+    df["RnD_gap"]               = df["Research_Spend_Source"]    - df["Research_Spend_Target"]
+    df["Unemployment_gap"]      = df["Unemployment_Source"]      - df["Unemployment_Target"]
+    df["Trade_openness_mean"]   = (df["Trade_Openness_Source"]   + df["Trade_Openness_Target"]) / 2
+    df["Trade_openness_diff"]   = df["Trade_Openness_Source"]    - df["Trade_Openness_Target"]
+    df["Market_size_target"]    = np.log1p(df["GDP_USD_Target"]  * df["Population_Target"])
+    df["GDP_per_capita_target"] = np.log1p(df["GDP_USD_Target"]  / (df["Population_Target"] + 1))
+    df["Macro_stability"]       = -np.abs(df["Inflation_Target"])
+    df["Digital_gap"]           = df["Internet_Users_Source"]    - df["Internet_Users_Target"]
+    df["Tech_intensity_source"] = df["HighTech_Export_Source"]   * df["Research_Spend_Source"]
+    df["FDI_ratio"]             = (np.log1p(df["FDI_Inflow_Source"])
+                                   / (np.log1p(df["FDI_Inflow_Target"]) + 1e-6))
     df["Year_norm"]   = (df["Year"] - 2000) / 20
     df["Crisis_2008"] = df["Year"].isin([2008, 2009]).astype(int)
     df = pd.get_dummies(df, columns=["Source_Country", "Sector_Code"], drop_first=False)
@@ -77,19 +77,25 @@ def feature_engineering(df):
 # ── Main ───────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # 1. Charger les données
     print("Chargement des données...")
-    df_train = pd.read_csv(os.path.join(DATA_DIR, "X_train.csv"))
-    df_test  = pd.read_csv(os.path.join(DATA_DIR, "X_test.csv"))
 
-    df_train = fill_missing(df_train)
-    df_test  = fill_missing(df_test)
+    # 1. Charger X et y séparément
+    X_train_raw = pd.read_csv(os.path.join(DATA_DIR, "X_train.csv"), index_col=0)
+    y_train     = pd.read_csv(os.path.join(DATA_DIR, "y_train.csv"), index_col=0).squeeze()
+    X_test_raw  = pd.read_csv(os.path.join(DATA_DIR, "X_test.csv"),  index_col=0)
 
-    # Concat pour encodage one-hot cohérent
-    df_all = pd.concat([df_train, df_test], ignore_index=True)
+    # 2. Ajouter temporairement la target pour ne pas perdre l'index lors du concat
+    X_train_raw["TiVA_Value_Target"] = y_train.values
+    X_test_raw["TiVA_Value_Target"]  = 0  # placeholder, non utilisé
+
+    # 3. Fill missing + feature engineering sur le tout
+    X_train_raw = fill_missing(X_train_raw)
+    X_test_raw  = fill_missing(X_test_raw)
+
+    df_all = pd.concat([X_train_raw, X_test_raw], ignore_index=True)
     df_all = feature_engineering(df_all)
 
-    # 2. Split
+    # 4. Split
     train_mask = df_all["Year"] <= 2015
     pub_mask   = df_all["Year"].between(2016, 2018)
     priv_mask  = df_all["Year"].between(2019, 2020)
@@ -100,15 +106,15 @@ if __name__ == "__main__":
     X_pub   = df_all[pub_mask].drop(columns=drop_cols)
     X_priv  = df_all[priv_mask].drop(columns=drop_cols)
 
-    # 3. Normalisation
-    scaler = StandardScaler()
+    # 5. Normalisation
+    scaler     = StandardScaler()
     X_train_sc = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns, index=X_train.index)
     X_pub_sc   = pd.DataFrame(scaler.transform(X_pub),   columns=X_pub.columns,   index=X_pub.index)
     X_priv_sc  = pd.DataFrame(scaler.transform(X_priv),  columns=X_priv.columns,  index=X_priv.index)
 
     print(f"  Train : {X_train_sc.shape} | Public : {X_pub_sc.shape} | Privé : {X_priv_sc.shape}")
 
-    # 4. Charger le modèle du participant
+    # 6. Charger le modèle du participant
     submission_file = os.path.join(SUBMISSION_DIR, "submission.py")
     if not os.path.exists(submission_file):
         raise FileNotFoundError(f"submission.py introuvable dans {SUBMISSION_DIR}")
@@ -123,7 +129,7 @@ if __name__ == "__main__":
     model = module.get_model()
     print(f"Modèle chargé : {type(model).__name__}")
 
-    # 5. Entraîner et prédire
+    # 7. Entraîner et prédire
     print("Entraînement...")
     model.fit(X_train_sc, y_train)
 
@@ -131,12 +137,11 @@ if __name__ == "__main__":
     y_pred_pub  = model.predict(X_pub_sc)
     y_pred_priv = model.predict(X_priv_sc)
 
-    # 6. Sauvegarder
+    # 8. Sauvegarder
     pd.DataFrame({"TiVA_Value_Target": y_pred_pub}).to_csv(
         os.path.join(OUTPUT_DIR, "predictions_public.csv"), index=False)
     pd.DataFrame({"TiVA_Value_Target": y_pred_priv}).to_csv(
         os.path.join(OUTPUT_DIR, "predictions_private.csv"), index=False)
 
-    print(f"Prédictions sauvegardées dans {OUTPUT_DIR}")
     print(f"  predictions_public.csv  : {len(y_pred_pub)} lignes")
     print(f"  predictions_private.csv : {len(y_pred_priv)} lignes")
