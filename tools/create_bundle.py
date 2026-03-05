@@ -53,10 +53,10 @@ INCLUDE = [
     "scoring_program/scoring.py",
     "scoring_program/metadata.yaml",
     "solution/submission.py",
-    "pages/overview.md",
-    "pages/data.md",
-    "pages/evaluation.md",
-    "pages/starting_kit.md",
+    "pages/participate.md",
+    "pages/seed.md",
+    "pages/timeline.md",
+    "pages/terms.md",
     "pages/terms.md",
 ]
 

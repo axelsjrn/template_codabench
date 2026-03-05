@@ -1,24 +1,20 @@
 title: "TiVA Time-Machine — Nowcasting des Chaînes de Valeur Mondiales"
-description: "Prédire les flux de valeur ajoutée TiVA des pays du G7 vers 80+ économies mondiales, à partir d'indicateurs macro-économiques disponibles en temps réel."
+description: "Prédire les flux de valeur ajoutée TiVA des pays du G7 vers 80+ économies mondiales."
 version: 2
 image: logo.png
 registration_auto_approve: True
 docker_image: codalab/codalab-legacy:py39
 enable_detailed_results: True
 
-# Documentation
 terms: pages/terms.md
 pages:
-  - title: "Présentation"
-    file: pages/overview.md
-  - title: "Données"
-    file: pages/data.md
-  - title: "Évaluation"
-    file: pages/evaluation.md
+  - title: "Participer"
+    file: pages/participate.md
   - title: "Starting Kit"
-    file: pages/starting_kit.md
+    file: pages/seed.md
+  - title: "Timeline"
+    file: pages/timeline.md
 
-# Tâches
 tasks:
   - index: 0
     name: "Nowcasting TiVA"
@@ -29,18 +25,18 @@ tasks:
     ingestion_program: ingestion_program
     scoring_program: scoring_program
 
-# Solution de référence
 solutions:
   - index: 0
     name: "Baseline Random Forest"
     description: "Random Forest simple — score de référence : 45 097"
     path: solution
+    tasks:
+      - 0
 
-# Phases
 phases:
   - index: 0
     name: "Phase de développement (2016-2020)"
-    description: "Entraînez votre modèle sur 2005-2015 et prédisez les flux TiVA pour 2016-2020."
+    description: "Train sur 2005-2015, eval sur 2016-2020."
     start: 1-1-2026
     end: 6-1-2026
     max_submissions_per_day: 5
@@ -48,11 +44,7 @@ phases:
     execution_time_limit: 1200
     tasks:
       - 0
-    solutions:
-      - 0
-    starting_kit: solution
 
-# Leaderboard
 leaderboards:
   - index: 0
     title: Résultats
