@@ -8,7 +8,7 @@ enable_detailed_results: True
 
 terms: pages/terms.md
 pages:
-  - title: "Participer"
+  - title: "Participate"
     file: pages/participate.md
   - title: "Starting Kit"
     file: pages/seed.md

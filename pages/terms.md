@@ -1,18 +1,43 @@
 # Terms and Conditions
 
-## Lorem Ipsum
+## Eligibility
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+This competition is open to everyone. By participating, you agree to these terms.
 
-## Sed ut perspiciatis
+## Data Usage
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae 
-ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit 
-aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam 
-est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore 
-et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, 
-nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae 
-consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
+- The datasets provided are for **competition purposes only**
+- You may not redistribute or publish the data
+- Data must not be used for any commercial purpose outside this competition
+
+## Submission Rules
+
+- You may submit up to **5 times per day** and **100 times total**
+- Each submission must be your own work
+- Using the test labels (`y_test`) during training constitutes **data leakage** and will result in disqualification
+- Submissions must follow the required format: a `submission.zip` containing `submission.py` with a `get_model()` function
+
+## Fair Play
+
+- Collaboration between teams is not allowed unless explicitly stated
+- You may use public datasets and open-source libraries
+- Pre-trained models are allowed as long as they do not incorporate the competition's test data
+
+## Leaderboard
+
+- The public leaderboard is based on the **2016–2018** test period (30% of the final score)
+- The final score includes the **private test (2019–2020)**, weighted at 70%
+- The organizers reserve the right to verify winning submissions
+
+## Intellectual Property
+
+- You retain ownership of your submitted code
+- By submitting, you grant the organizers the right to reproduce your results for academic purposes
+
+## Liability
+
+The organizers are not responsible for any technical issues on the Codabench platform. Scores are computed automatically — contact the organizers if you believe there is an error.
+
+## Contact
+
+For any questions, please use the competition forum on Codabench.
