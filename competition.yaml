@@ -1,60 +1,64 @@
-version: 2
-title: Templat competition - Dummy classification
-description: Dummy classification task
+---
+title: "TiVA Time-Machine — Nowcasting des Chaînes de Valeur Mondiales"
+description: >
+  Prédire les flux de valeur ajoutée TiVA des pays du G7 vers 80+ économies mondiales,
+  à partir d'indicateurs macro-économiques disponibles en temps réel —
+  sans attendre les 3 ans de délai de l'OCDE.
+
 image: logo.png
-registration_auto_approve: False  # if True, do not require approval from admin to join the comp
-
-terms: pages/terms.md
-pages:
-  - title: Participation
-    file: pages/participate.md
-  - title: Seed
-    file: pages/seed.md
-  - title: Timeline
-    file: pages/timeline.md
-
-tasks:
-  - index: 0
-    name: Developement Task
-    description: 'Tune models with training data, test against examples contained in public test data'
-    input_data: dev_phase/input_data/
-    reference_data: dev_phase/reference_data/
-    ingestion_program: ingestion_program/
-    scoring_program: scoring_program/
-
-solutions:
-  - index: 0
-    tasks:
-    - 0
-    path: solution/
-
+has_registration: false
+allow_teams: true
+max_submissions_per_day: 5
+max_submissions: 100
+competition_docker_image: codalab/codalab-legacy:py37
 
 phases:
-  - name: Development Phase
-    description: 'Development phase: tune your models.'
-    start: 10-07-2025
-    end: 03-31-2026
-    tasks:
-      - 0
+  1:
+    phasenumber: 1
+    label: "Phase Publique (2016-2018)"
+    description: >
+      Entraînez votre modèle sur les années 2005-2015 et prédisez
+      les flux TiVA pour 2016-2018 (période stable).
+    start_date: "2026-01-01"
+    max_submissions: 100
+    max_submissions_per_day: 5
+    ingestion_program: ingestion_program/
+    scoring_program: scoring_program/
+    reference_data: dev_phase/reference_data/
+    input_data: dev_phase/input_data/
 
-leaderboards:
-  - title: Results
-    key: main
-    columns:
-      - title: Test Accuracy
-        key: test
-        index: 0
-        sorting: asc
-      - title: Private Test Accuracy
-        key: private_test
-        index: 1
-        sorting: asc
-        hidden: True
-      - title: Train time
-        key: train_time
-        index: 2
-        sorting: desc
-      - title: Test time
-        key: test_time
-        index: 3
-        sorting: desc
+  2:
+    phasenumber: 2
+    label: "Phase Privée (2019-2020 — COVID + Guerre commerciale)"
+    description: >
+      Période de rupture structurelle : tensions USA-Chine et COVID-19.
+      Pondération x2.33 dans le score final.
+    start_date: "2026-02-01"
+    max_submissions: 20
+    max_submissions_per_day: 2
+    ingestion_program: ingestion_program/
+    scoring_program: scoring_program/
+    reference_data: dev_phase/reference_data/
+    input_data: dev_phase/input_data/
+
+leaderboard:
+  - label: "Score Final"
+    key: score
+    rank: 1
+    ordering: asc
+  - label: "MAE Public (2016-2018)"
+    key: mae_public
+    ordering: asc
+  - label: "MAE Privé (2019-2020)"
+    key: mae_private
+    ordering: asc
+
+pages:
+  - title: "Présentation"
+    file: pages/overview.md
+  - title: "Données"
+    file: pages/data.md
+  - title: "Évaluation"
+    file: pages/evaluation.md
+  - title: "Starting Kit"
+    file: pages/starting_kit.md
