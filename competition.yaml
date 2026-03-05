@@ -1,16 +1,12 @@
 title: "TiVA Time-Machine — Nowcasting des Chaînes de Valeur Mondiales"
-description: >
-  Prédire les flux de valeur ajoutée TiVA des pays du G7 vers 80+ économies mondiales,
-  à partir d'indicateurs macro-économiques disponibles en temps réel —
-  sans attendre les 3 ans de délai de l'OCDE.
+description: "Prédire les flux de valeur ajoutée TiVA des pays du G7 vers 80+ économies mondiales, à partir d'indicateurs macro-économiques disponibles en temps réel."
 version: 2
 image: logo.png
 registration_auto_approve: True
 docker_image: codalab/codalab-legacy:py39
-make_programs_available: False
-make_input_data_available: False
+enable_detailed_results: True
 
-# --- Pages de documentation ---
+# Documentation
 terms: pages/terms.md
 pages:
   - title: "Présentation"
@@ -22,7 +18,7 @@ pages:
   - title: "Starting Kit"
     file: pages/starting_kit.md
 
-# --- Définition des tâches ---
+# Tâches
 tasks:
   - index: 0
     name: "Nowcasting TiVA"
@@ -33,32 +29,34 @@ tasks:
     ingestion_program: ingestion_program
     scoring_program: scoring_program
 
-# --- Solution de référence (baseline) ---
+# Solution de référence
 solutions:
   - index: 0
     name: "Baseline Random Forest"
-    description: "Random Forest simple sans tuning — score de référence : 45 097"
+    description: "Random Forest simple — score de référence : 45 097"
     path: solution
 
-# --- Phases ---
+# Phases
 phases:
   - index: 0
     name: "Phase de développement (2016-2020)"
-    description: >
-      Entraînez votre modèle sur 2005-2015 et prédisez les flux TiVA pour
-      2016-2018 (public) et 2019-2020 (privé — COVID + guerre commerciale).
-    start: 01-01-2026
-    end: 06-01-2026
+    description: "Entraînez votre modèle sur 2005-2015 et prédisez les flux TiVA pour 2016-2020."
+    start: 1-1-2026
+    end: 6-1-2026
     max_submissions_per_day: 5
     max_submissions: 100
-    task: 0
+    execution_time_limit: 1200
+    tasks:
+      - 0
+    solutions:
+      - 0
     starting_kit: solution
 
-# --- Leaderboard ---
+# Leaderboard
 leaderboards:
   - index: 0
-    title: "Classement"
-    key: "main"
+    title: Résultats
+    key: Results
     columns:
       - title: "Score Final"
         key: score
