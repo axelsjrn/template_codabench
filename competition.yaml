@@ -1,58 +1,17 @@
----
 title: "TiVA Time-Machine — Nowcasting des Chaînes de Valeur Mondiales"
 description: >
   Prédire les flux de valeur ajoutée TiVA des pays du G7 vers 80+ économies mondiales,
   à partir d'indicateurs macro-économiques disponibles en temps réel —
   sans attendre les 3 ans de délai de l'OCDE.
-
+version: 2
 image: logo.png
-has_registration: false
-allow_teams: true
-max_submissions_per_day: 5
-max_submissions: 100
-competition_docker_image: codalab/codalab-legacy:py37
+registration_auto_approve: True
+docker_image: codalab/codalab-legacy:py39
+make_programs_available: False
+make_input_data_available: False
 
-phases:
-  1:
-    phasenumber: 1
-    label: "Phase Publique (2016-2018)"
-    description: >
-      Entraînez votre modèle sur les années 2005-2015 et prédisez
-      les flux TiVA pour 2016-2018 (période stable).
-    start_date: "2026-01-01"
-    max_submissions: 100
-    max_submissions_per_day: 5
-    ingestion_program: ingestion_program/
-    scoring_program: scoring_program/
-    reference_data: dev_phase/reference_data/
-    input_data: dev_phase/input_data/
-
-  2:
-    phasenumber: 2
-    label: "Phase Privée (2019-2020 — COVID + Guerre commerciale)"
-    description: >
-      Période de rupture structurelle : tensions USA-Chine et COVID-19.
-      Pondération x2.33 dans le score final.
-    start_date: "2026-02-01"
-    max_submissions: 20
-    max_submissions_per_day: 2
-    ingestion_program: ingestion_program/
-    scoring_program: scoring_program/
-    reference_data: dev_phase/reference_data/
-    input_data: dev_phase/input_data/
-
-leaderboard:
-  - label: "Score Final"
-    key: score
-    rank: 1
-    ordering: asc
-  - label: "MAE Public (2016-2018)"
-    key: mae_public
-    ordering: asc
-  - label: "MAE Privé (2019-2020)"
-    key: mae_private
-    ordering: asc
-
+# --- Pages de documentation ---
+terms: pages/terms.md
 pages:
   - title: "Présentation"
     file: pages/overview.md
@@ -62,3 +21,54 @@ pages:
     file: pages/evaluation.md
   - title: "Starting Kit"
     file: pages/starting_kit.md
+
+# --- Définition des tâches ---
+tasks:
+  - index: 0
+    name: "Nowcasting TiVA"
+    description: "Prédire TiVA_Value_Target à partir des indicateurs macro G7 et pays cibles"
+    is_public: true
+    input_data: dev_phase/input_data
+    reference_data: dev_phase/reference_data
+    ingestion_program: ingestion_program
+    scoring_program: scoring_program
+
+# --- Solution de référence (baseline) ---
+solutions:
+  - index: 0
+    name: "Baseline Random Forest"
+    description: "Random Forest simple sans tuning — score de référence : 45 097"
+    path: solution
+
+# --- Phases ---
+phases:
+  - index: 0
+    name: "Phase de développement (2016-2020)"
+    description: >
+      Entraînez votre modèle sur 2005-2015 et prédisez les flux TiVA pour
+      2016-2018 (public) et 2019-2020 (privé — COVID + guerre commerciale).
+    start: 01-01-2026
+    end: 06-01-2026
+    max_submissions_per_day: 5
+    max_submissions: 100
+    task: 0
+    starting_kit: solution
+
+# --- Leaderboard ---
+leaderboards:
+  - index: 0
+    title: "Classement"
+    key: "main"
+    columns:
+      - title: "Score Final"
+        key: score
+        index: 0
+        sorting: asc
+      - title: "MAE Public (2016-2018)"
+        key: mae_public
+        index: 1
+        sorting: asc
+      - title: "MAE Privé (2019-2020)"
+        key: mae_private
+        index: 2
+        sorting: asc

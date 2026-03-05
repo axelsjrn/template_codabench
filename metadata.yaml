@@ -1,0 +1,2 @@
+command: python3 ingestion_program/ingestion.py --data-dir $input --output-dir $output --submission-dir $program
+description: TiVA Time-Machine ingestion program - loads data, runs participant model, outputs predictions
